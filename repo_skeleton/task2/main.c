@@ -1,28 +1,26 @@
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <pthread.h>
 #include <signal.h>
-#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 static int wfd;
 
-static void *reader(void *arg)
-{
-    int fd = *(int *)arg;
-    char buf[512];
+static void* reader(void* arg) {
+    int     fd = *(int*) arg;
+    char    buf[512];
     ssize_t n;
     while ((n = read(fd, buf, sizeof buf)) > 0)
         write(STDOUT_FILENO, buf, n);
     return NULL;
 }
 
-static void *writer(void *arg)
-{
-    (void)arg;
-    char buf[512];
+static void* writer(void* arg) {
+    (void) arg;
+    char    buf[512];
     ssize_t n;
     while ((n = read(STDIN_FILENO, buf, sizeof buf)) > 0)
         if (write(wfd, buf, n) < 0)
@@ -30,8 +28,7 @@ static void *writer(void *arg)
     return NULL;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: task2 <fifo_path>\n");
         return 1;
@@ -52,12 +49,15 @@ int main(int argc, char *argv[])
     int rfd;
     if (is_a) {
         wfd = open(argv[1], O_WRONLY);
-        rfd = open(back,    O_RDONLY);
+        rfd = open(back, O_RDONLY);
     } else {
         rfd = open(argv[1], O_RDONLY);
-        wfd = open(back,    O_WRONLY);
+        wfd = open(back, O_WRONLY);
     }
-    if (rfd < 0 || wfd < 0) { perror("open"); return 1; }
+    if (rfd < 0 || wfd < 0) {
+        perror("open");
+        return 1;
+    }
 
     pthread_t tr, tw;
     pthread_create(&tr, NULL, reader, &rfd);
